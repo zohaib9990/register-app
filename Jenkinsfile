@@ -21,7 +21,7 @@ pipeline {
 	 }
 	 stage("Checkout from SCM"){
 		 steps {
-		     git branch: 'master', credentialsId: 'gitHub', url: 'https://github.com/thoratsunil/register-app.git'
+		     git branch: 'master', credentialsId: 'gitHub', url: 'https://github.com/zohaib9990/register-app.git'
 		 }
 	 }
 	 stage("Build Application"){
