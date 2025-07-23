@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'jenkins-agent' }
+    agent any
     tools {
         jdk 'java17'
         maven 'maven3'
@@ -14,7 +14,7 @@ pipeline {
 
         stage('Checkout from SCM') {
             steps {
-                git branch: 'master', credentialsId: 'github', url: 'https://github.com/thoratsumit/register-app.git'
+                git branch: 'master', credentialsId: 'github', url: 'https://github.com/zohaib9990/register-app.git'
             }
         }
 
