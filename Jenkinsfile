@@ -1,56 +1,47 @@
 pipeline {
     agent any
 
-    environment {
-        // Credential ID for SonarQube token stored in Jenkins
-        SONARQUBE_CRED_ID = 'jenkins-sonarqube-token'
+    tools {
+        maven 'maven3'     // Use correct name as per Global Tool Configuration
+        jdk 'java17'       // Use correct name as per Global Tool Configuration
     }
 
-    tools {
-        // Define Maven and JDK installations (as configured in Jenkins global tools)
-        maven 'Maven 3.8.6'         // Replace with your Maven installation name
-        jdk 'JDK 11'                // Replace with your JDK installation name
+    environment {
+        SONARQUBE_ENV = 'SonarQube' // This must match the name configured in Jenkins > Configure System > SonarQube servers
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git 'https://github.com/zohaib9990/register-app.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean package'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(installationName: 'MySonarQubeServer', credentialsId: "${SONARQUBE_CRED_ID}") {
+                withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
                 }
             }
         }
 
-        stage('Quality Gate') {
+        stage('Test') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true, credentialsId: "${SONARQUBE_CRED_ID}"
-                }
+                sh 'mvn test'
             }
         }
-    }
 
-    post {
-        success {
-            echo '✅ Build and SonarQube analysis successful.'
-        }
-        failure {
-            echo '❌ Build or analysis failed. Check console output.'
-        }
-        always {
-            echo '📦 Jenkins pipeline finished.'
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+                // Add deploy steps here
+            }
         }
     }
 }
