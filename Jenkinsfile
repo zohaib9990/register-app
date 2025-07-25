@@ -1,43 +1,44 @@
 pipeline {
     agent any
-    tools {
-        jdk 'java17'
-        maven 'maven3'
+
+    environment {
+        // Replace this with your SonarQube server name configured in Jenkins
+        SONARQUBE_ENV = 'SonarQube'
     }
 
     stages {
-        stage('Cleanup Workspace') {
+        stage('Checkout') {
             steps {
-                cleanWs()
+                checkout scm
             }
         }
 
-        stage('Checkout from SCM') {
+        stage('Build') {
             steps {
-                git branch: 'master', credentialsId: 'github', url: 'https://github.com/zohaib9990/register-app.git'
+                sh 'mvn clean install'
             }
         }
 
-        stage('Build Application') {
+        stage('SonarQube Analysis') {
             steps {
-                sh 'mvn clean package'
-            }
-        }
-
-        stage('Test Application') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage("SonarQube Analysis") {
-            steps {
-                script {
-                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
-                        sh "mvn sonar:sonar"
-                    }
+                withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
+                    sh 'mvn sonar:sonar'
                 }
             }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
         }
     }
 }
