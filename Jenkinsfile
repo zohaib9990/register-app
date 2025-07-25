@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // Replace this with your SonarQube server name configured in Jenkins
-        SONARQUBE_ENV = 'SonarQube'
+        // Use environment for credentials only
+        SONARQUBE_CRED_ID = 'jenkins-sonarqube-token' // ID from Jenkins credentials
     }
 
     stages {
@@ -21,7 +21,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
+                withSonarQubeEnv(installationName: 'MySonarQubeServer', credentialsId: "${SONARQUBE_CRED_ID}") {
                     sh 'mvn sonar:sonar'
                 }
             }
@@ -30,7 +30,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: "${SONARQUBE_CRED_ID}"
                 }
             }
         }
