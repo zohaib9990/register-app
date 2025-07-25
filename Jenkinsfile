@@ -1,46 +1,55 @@
 pipeline {
     agent any
-
     tools {
-        maven 'maven3'     // Use correct name as per Global Tool Configuration
-        jdk 'java17'       // Use correct name as per Global Tool Configuration
-    }
-
-    environment {
-        SONARQUBE_ENV = 'SonarQube' // This must match the name configured in Jenkins > Configure System > SonarQube servers
+        jdk 'java17'
+        maven 'maven3'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Cleanup Workspace') {
             steps {
-                git 'https://github.com/zohaib9990/register-app.git'
+                cleanWs()
             }
         }
 
-        stage('Build') {
+        stage('Checkout from SCM') {
+            steps {
+                git branch: 'master', credentialsId: 'github', url: 'https://github.com/zohaib9990/register-app.git'
+            }
+        }
+
+        stage('Build Application') {
             steps {
                 sh 'mvn clean package'
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
-
-        stage('Test') {
+        stage('Test Application') {
             steps {
                 sh 'mvn test'
             }
         }
 
-        stage('Deploy') {
+        stage('SonarQube Analysis') {
             steps {
-                echo 'Deploying...'
-                // Add deploy steps here
+                script {
+                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
+                        sh "mvn sonar:sonar"
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
             }
         }
     }
