@@ -2,8 +2,14 @@ pipeline {
     agent any
 
     environment {
-        // Use environment for credentials only
-        SONARQUBE_CRED_ID = 'jenkins-sonarqube-token' // ID from Jenkins credentials
+        // Credential ID for SonarQube token stored in Jenkins
+        SONARQUBE_CRED_ID = 'jenkins-sonarqube-token'
+    }
+
+    tools {
+        // Define Maven and JDK installations (as configured in Jenkins global tools)
+        maven 'Maven 3.8.6'         // Replace with your Maven installation name
+        jdk 'JDK 11'                // Replace with your JDK installation name
     }
 
     stages {
@@ -29,16 +35,22 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: "${SONARQUBE_CRED_ID}"
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true, credentialsId: "${SONARQUBE_CRED_ID}"
                 }
             }
         }
     }
 
     post {
+        success {
+            echo '✅ Build and SonarQube analysis successful.'
+        }
+        failure {
+            echo '❌ Build or analysis failed. Check console output.'
+        }
         always {
-            echo 'Pipeline completed.'
+            echo '📦 Jenkins pipeline finished.'
         }
     }
 }
