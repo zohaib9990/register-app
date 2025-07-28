@@ -49,6 +49,13 @@ pipeline {
                 }
             }
         }
-    } // Close stages
 
-} // Close pipeline
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkinsa-sonarqube-token'
+                }
+            }
+        }
+    }
+}
