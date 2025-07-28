@@ -39,3 +39,6 @@ pipeline {
                 sh 'mvn test'
             }
         }
+    } // <-- This was missing: closes stages block
+
+} // <-- This was missing: closes pipeline block
