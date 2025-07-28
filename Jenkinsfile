@@ -9,8 +9,8 @@ pipeline {
     environment {
         APP_NAME = "register-app-pipeline"
         RELEASE = "1.0.0"
-        DOCKER_USER = "thoratsunil121"
-        DOCKER_PASS = "dockerhub"
+        DOCKER_USER = "zohaib56"
+        DOCKER_PASS = "dockerhub"  // Must match Jenkins Credentials ID (type: username/password)
         IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
     }
@@ -54,6 +54,18 @@ pipeline {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'jenkinsa-sonarqube-token'
+                }
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_PASS) {
+                        def docker_image = docker.build("${IMAGE_NAME}")
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push('latest')
+                    }
                 }
             }
         }
