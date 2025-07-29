@@ -14,10 +14,25 @@ spec:
     spec:
       containers:
         - name: register-app
-          image: zohaib56/register-app-pipeline:1.0.0-2  # Correct tag from DockerHub
+          image: zohaib56/register-app-pipeline:1.0.0-2
           resources:
             limits:
               memory: "256Mi"
               cpu: "500m"
           ports:
             - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: register-app-service
+spec:
+  selector:
+    app: register-app
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 30080  # Optional custom port in range 30000–32767
