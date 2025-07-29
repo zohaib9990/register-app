@@ -1,11 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: register-app-deployment
-  labels:
-    app: register-app
+  name: register-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: register-app
@@ -15,7 +13,21 @@ spec:
         app: register-app
     spec:
       containers:
-        - name: register-app-container
-          image: zohaib56/register-app-pipeline:10.0.0-2
+        - name: register-app
+          image: zohaib56/register-app-pipeline:1.0.0-2
           ports:
             - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: register-app-service
+spec:
+  type: ClusterIP
+  clusterIP: 10.0.0.2
+  selector:
+    app: register-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
