@@ -7,12 +7,10 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "register-app-pipeline"
-        RELEASE = "1.0.0"
-        DOCKER_USER = "zohaib56"
-        DOCKER_PASS = "dockerhub"  // Must match Jenkins Credentials ID (type: username/password)
-        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
-        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
+        APP_NAME   = "register-app-pipeline"
+        RELEASE    = "1.0.0"
+        IMAGE_NAME = "zohaib56/${APP_NAME}"
+        IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -61,11 +59,23 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_PASS) {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
                         def docker_image = docker.build("${IMAGE_NAME}")
                         docker_image.push("${IMAGE_TAG}")
-                        docker_image.push('latest')
+                        docker_image.push("latest")
                     }
+                }
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                script {
+                    sh """
+                        docker run --rm \
+                          -v /var/run/docker.sock:/var/run/docker.sock \
+                          aquasec/trivy image ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
                 }
             }
         }
